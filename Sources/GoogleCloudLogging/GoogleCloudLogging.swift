@@ -29,6 +29,7 @@ let kSecAttrKeyType = "type"
 let kSecAttrKeyTypeRSA = 42
 let kSecAttrKeyClass = "kcls"
 let kSecAttrKeyClassPrivate = 1
+let kSecAttrKeySizeInBits = "bsiz"
 
 class GoogleCloudLogging {
     
