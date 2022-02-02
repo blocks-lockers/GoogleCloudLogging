@@ -25,6 +25,11 @@ import FoundationNetworking
 #endif
 import Crypto
 
+let kSecAttrKeyType = "type"
+let kSecAttrKeyTypeRSA = 42
+let kSecAttrKeyClass = "kcls"
+let kSecAttrKeyClassPrivate = 1
+
 class GoogleCloudLogging {
     
     enum InitError: Error {
