@@ -20,7 +20,6 @@
 
 import CoreFoundation
 import Foundation
-import Security
 import CommonCrypto
 #if canImport(FoundationNetworking)
 import FoundationNetworking
