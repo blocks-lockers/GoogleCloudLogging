@@ -18,6 +18,9 @@
 //  limitations under the License.
 //
 
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 import Foundation
 import Logging
 
