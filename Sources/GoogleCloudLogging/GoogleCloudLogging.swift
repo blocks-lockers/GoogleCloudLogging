@@ -20,10 +20,10 @@
 
 import CoreFoundation
 import Foundation
-import CommonCrypto
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
+import Crypto
 
 class GoogleCloudLogging {
     
