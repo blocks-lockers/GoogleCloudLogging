@@ -18,6 +18,7 @@
 //  limitations under the License.
 //
 
+import CoreFoundation
 import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking

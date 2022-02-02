@@ -21,6 +21,7 @@
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
+import CoreFoundation
 import Foundation
 import Logging
 
