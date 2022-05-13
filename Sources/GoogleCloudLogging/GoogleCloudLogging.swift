@@ -23,7 +23,7 @@ import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
-import Crypto
+import CryptorRSA
 
 let kSecAttrKeyType = "type"
 let kSecAttrKeyTypeRSA = 42
@@ -125,29 +125,16 @@ class GoogleCloudLogging {
             let encoder = JSONEncoder()
             let encodedHeader = try encoder.encode(header).base64URLEncodedString()
             let encodedPayload = try encoder.encode(payload).base64URLEncodedString()
-            let privateKey = try key(from: credentials.privateKey)
-            let signature = try sign(Data("\(encodedHeader).\(encodedPayload)".utf8), with: privateKey)
+            let signature = try sign(Data("\(encodedHeader).\(encodedPayload)".utf8), with: credentials.privateKey)
             let encodedSignature = signature.base64URLEncodedString()
             return "\(encodedHeader).\(encodedPayload).\(encodedSignature)"
         }
         
-        static func key(from pem: String) throws -> Data {
-            let unwrappedPEM = pem.split(separator: "\n").filter { !$0.contains("PRIVATE KEY") }.joined()
-            let headerLength = 26
-            guard let der = Data(base64Encoded: unwrappedPEM), der.count > headerLength else { throw KeyError.unableToDecode(from: pem) }
-            return der[headerLength...]
-        }
-        
-        static func sign(_ data: Data, with key: Data) throws -> Data {
-            var error: Unmanaged<CFError>?
-            let attributes = [kSecAttrKeyType: kSecAttrKeyTypeRSA, kSecAttrKeyClass: kSecAttrKeyClassPrivate, kSecAttrKeySizeInBits: 256] as CFDictionary
-            guard let privateKey = SecKeyCreateWithData(key as CFData, attributes, &error) else {
-                throw error!.takeRetainedValue() as Error
-            }
-            guard let signature = SecKeyCreateSignature(privateKey, .rsaSignatureMessagePKCS1v15SHA256, data as CFData, &error) as Data? else {
-                throw error!.takeRetainedValue() as Error
-            }
-            return signature
+        static func sign(_ data: Data, with key: String) throws -> Data {
+            let privateKey = try CryptorRSA.createPrivateKey(withPEM: key)
+            let plain = CryptorRSA.createPlaintext(with: data)
+            let signed = try plain.signed(with: privateKey, algorithm: .sha256)
+            return signed!.data
         }
     }
     
@@ -394,7 +381,7 @@ extension CharacterSet {
 extension String {
     
     func safeLogId() -> String {
-        let logId = String((applyingTransform(.toLatin, reverse: false) ?? self)
+        let logId = String((self)
             .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: .init(identifier: "en_US"))
             .replacingOccurrences(of: " ", with: "_")
             .unicodeScalars
