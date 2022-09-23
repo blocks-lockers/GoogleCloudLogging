@@ -359,7 +359,6 @@ public struct GoogleCloudLogHandler: LogHandler {
                 func deleteOldEntries() {
                     do {
                         try (fileHandle.legacyReadToEnd() ?? Data()).write(to: logFile, options: .atomic)
-                        logger.debug("Uploaded logs have been deleted")
                     } catch {
                         logger.error("Unable to delete uploaded logs", metadata: [MetadataKey.error: "\(error)"])
                     }
@@ -393,7 +392,6 @@ public struct GoogleCloudLogHandler: LogHandler {
                     fileHandleQueue.async {
                         switch result {
                         case .success:
-                            logger.info("Logs have been uploaded")
                             deleteOldEntries()
                         case .failure(let error):
                             switch error {
