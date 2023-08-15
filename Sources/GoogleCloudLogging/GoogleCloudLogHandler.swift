@@ -88,7 +88,7 @@ public struct GoogleCloudLogHandler: LogHandler {
     ///
     /// **Default** is equivalent to `256 KB`, which is the approximate Google Cloud limit.
     ///
-    @Atomic public static var maxLogEntrySize: UInt? = 256_000
+    @Atomic public static var maxLogEntrySize: UInt? = 200_000
 
     /// Log upload size limit in bytes. *Atomic*.
     ///
@@ -96,7 +96,7 @@ public struct GoogleCloudLogHandler: LogHandler {
     ///
     /// **Default** is equivalent to `10 MB`, which is the approximate Google Cloud limit.
     ///
-    @Atomic public static var maxLogSize: UInt? = 10_000_000
+    @Atomic public static var maxLogSize: UInt? = 8_000_000
 
     /// Logs retention period in seconds. *Atomic*.
     ///
