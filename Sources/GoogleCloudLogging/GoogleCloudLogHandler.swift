@@ -116,7 +116,6 @@ public struct GoogleCloudLogHandler: LogHandler {
         didSet {
             if logging != nil {
                 timer.schedule(delay: uploadInterval, repeating: uploadInterval)
-                logger.debug("Log upload interval has been updated", metadata: [MetadataKey.uploadInterval: uploadInterval.map { "\($0)" } ?? "nil"])
             }
         }
     }
@@ -306,14 +305,10 @@ public struct GoogleCloudLogHandler: LogHandler {
     
     
     static func uploadOnSchedule() {
-        
-        logger.debug("Start uploading logs")
-        
         fileHandleQueue.async {
             do {
                 let fileHandle = try FileHandle(forReadingFrom: logFile)
                 guard let data = try fileHandle.legacyReadToEnd(), !data.isEmpty else {
-                    logger.debug("No logs to upload")
                     return
                 }
                 
