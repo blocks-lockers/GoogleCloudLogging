@@ -247,10 +247,11 @@ public struct GoogleCloudLogHandler: LogHandler {
         let date = Date()
         
         Self.fileHandleQueue.async {
+            let messagePayload = "[\(formatFileName(file)):\(line)] \(message)"
             let hashValue: Int? = Self.globalMetadata[MetadataKey.clientId].map {
                 var hasher = Hasher()
                 hasher.combine("\($0)") // Required in case random seeding is disabled.
-                hasher.combine("\(message)")
+                hasher.combine(messagePayload)
                 hasher.combine(date)
                 return hasher.finalize()
             }
@@ -270,7 +271,7 @@ public struct GoogleCloudLogHandler: LogHandler {
                                                         insertId: hashValue.map { String($0, radix: 36) },
                                                         labels: labels.isEmpty ? nil : labels,
                                                         sourceLocation: Self.includeSourceLocation ? .init(file: file, line: "\(line)", function: function) : nil,
-                                                        textPayload: "\(message)")
+                                                        textPayload: messagePayload)
             do {
                 try Self.prepareLogFile()
                 let fileHandle = try FileHandle(forWritingTo: Self.logFile)
@@ -407,6 +408,10 @@ public struct GoogleCloudLogHandler: LogHandler {
                 logger.error("Unable to read saved logs", metadata: [MetadataKey.error: "\(error)"])
             }
         }
+    }
+    
+    private func formatFileName(_ value: String) -> String {
+        value.components(separatedBy: "/").last ?? value
     }
 }
 
