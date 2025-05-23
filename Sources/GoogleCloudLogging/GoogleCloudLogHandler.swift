@@ -148,6 +148,9 @@ public struct GoogleCloudLogHandler: LogHandler {
     
     static let fileHandleQueue = DispatchQueue(label: "GoogleCloudLogHandler.FileHandle")
     
+    // Added lock for read/write synchronization
+    static let fileAccessLock = NSLock()
+    
     static let timer: DispatchSourceTimer = {
         let timer = DispatchSource.makeTimerSource()
         timer.setEventHandler(handler: uploadOnSchedule)
@@ -273,12 +276,15 @@ public struct GoogleCloudLogHandler: LogHandler {
                                                         sourceLocation: Self.includeSourceLocation ? .init(file: file, line: "\(line)", function: function) : nil,
                                                         textPayload: messagePayload)
             do {
+                Self.fileAccessLock.lock()
                 try Self.prepareLogFile()
                 let fileHandle = try FileHandle(forWritingTo: Self.logFile)
                 try fileHandle.legacySeekToEnd()
                 try fileHandle.legacyWrite(contentsOf: JSONEncoder().encode(logEntry))
                 try fileHandle.legacyWrite(contentsOf: [.newline])
+                Self.fileAccessLock.unlock()
             } catch {
+                Self.fileAccessLock.unlock()
                 if file != #file || function != #function {
                     Self.logger.error("Unable to save log entry", metadata: [MetadataKey.logEntry: "\(logEntry)", MetadataKey.error: "\(error)"])
                 }
@@ -307,6 +313,9 @@ public struct GoogleCloudLogHandler: LogHandler {
     
     static func uploadOnSchedule() {
         fileHandleQueue.async {
+            Self.fileAccessLock.lock()
+            defer { Self.fileAccessLock.unlock() }
+            
             do {
                 let fileHandle = try FileHandle(forReadingFrom: logFile)
                 guard let data = try fileHandle.legacyReadToEnd(), !data.isEmpty else {
