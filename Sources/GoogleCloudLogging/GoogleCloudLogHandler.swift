@@ -214,6 +214,8 @@ public struct GoogleCloudLogHandler: LogHandler {
             let writeHandle = try FileHandle(forWritingTo: logFile)
             writeHandle.truncateFile(atOffset: 0)
             try writeHandle.close()
+            
+            logger.debug("Log file cleared: \(fileSize)")
         } catch {
             logger.warning("Unable to clear log file: \(error.localizedDescription)")
         }
