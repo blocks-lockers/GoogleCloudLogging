@@ -97,6 +97,14 @@ public struct GoogleCloudLogHandler: LogHandler {
     /// **Default** is equivalent to `10 MB`, which is the approximate Google Cloud limit.
     ///
     @Atomic public static var maxLogSize: UInt? = 8_000_000
+    
+    /// Max file size in bytes. *Atomic*.
+    ///
+    /// Deletes file if exceeds limit
+    ///
+    /// **Default** is equivalent to `50 MB`, which is the approximate Google Cloud limit.
+    ///
+    @Atomic public static var maxFileSize: UInt = 52_428_800
 
     /// Logs retention period in seconds. *Atomic*.
     ///
@@ -194,6 +202,23 @@ public struct GoogleCloudLogHandler: LogHandler {
         }
     }
     
+    static func clearLogFileIfNeeded() {
+        do {
+            let fileHandle = try FileHandle(forReadingFrom: logFile)
+            let fileSize = fileHandle.seekToEndOfFile()
+            try fileHandle.close()
+            
+            guard fileSize > maxFileSize else {
+                return
+            }
+            let writeHandle = try FileHandle(forWritingTo: logFile)
+            writeHandle.truncateFile(atOffset: 0)
+            try writeHandle.close()
+        } catch {
+            logger.warning("Unable to clear log file: \(error.localizedDescription)")
+        }
+    }
+    
     /// Setup `GoogleCloudLogHandler`.
     ///
     /// It must be called once, usually right after the app has been launched.
@@ -214,6 +239,8 @@ public struct GoogleCloudLogHandler: LogHandler {
         
         Self.logFile = logFile
         try prepareLogFile()
+        
+        clearLogFileIfNeeded()
         
         upload()
         
