@@ -1,14 +1,12 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.10
 
 import PackageDescription
 
 let package = Package(
     name: "GoogleCloudLogging",
     platforms: [
-        .iOS(.v11),
-        .macOS(.v10_15),
-        .tvOS(.v11),
-        .watchOS(.v4),
+        .macOS(.v14),
+        .iOS(.v15)
     ],
     products: [
         .library(
