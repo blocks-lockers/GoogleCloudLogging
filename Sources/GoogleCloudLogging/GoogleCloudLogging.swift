@@ -34,7 +34,7 @@ let kSecAttrKeySizeInBits = "bsiz"
 class GoogleCloudLogging {
     
     enum InitError: Error {
-        case wrongCredentialsType(Credentials)
+        case wrongCredentialsType(GoogleCloudCredentials)
     }
     
     enum TokenRequestError: Error {
@@ -50,33 +50,6 @@ class GoogleCloudLogging {
         case noDataReceived(URLResponse?)
         case errorReceived(Response.Error)
     }
-    
-    
-    struct Credentials: Decodable {
-        enum CodingKeys: String, CodingKey {
-            case type = "type"
-            case projectId = "project_id"
-            case privateKeyId = "private_key_id"
-            case privateKey = "private_key"
-            case clientEmail = "client_email"
-            case clientId = "client_id"
-            case authURI = "auth_uri"
-            case tokenURI = "token_uri"
-            case authProviderX509CertURL = "auth_provider_x509_cert_url"
-            case clientX509CertURL = "client_x509_cert_url"
-        }
-        let type: String
-        let projectId: String
-        let privateKeyId: String
-        let privateKey: String
-        let clientEmail: String
-        let clientId: String
-        let authURI: String
-        let tokenURI: String
-        let authProviderX509CertURL: String
-        let clientX509CertURL: String
-    }
-    
     
     enum Scope: String {
         case loggingWrite = "https://www.googleapis.com/auth/logging.write"
@@ -113,7 +86,7 @@ class GoogleCloudLogging {
             let scope: String
         }
         
-        static func create(using credentials: Credentials, for scopes: [Scope]) throws -> String {
+        static func create(using credentials: GoogleCloudCredentials, for scopes: [Scope]) throws -> String {
             
             let header = Header(type: "JWT", algorithm: "RS256")
             let now = Date()
@@ -203,7 +176,7 @@ class GoogleCloudLogging {
     }
     
     
-    let serviceAccountCredentials: Credentials
+    let serviceAccountCredentials: GoogleCloudCredentials
     
     private var accessToken: Token?
     
@@ -215,7 +188,7 @@ class GoogleCloudLogging {
     
     init(serviceAccountCredentials url: URL) throws {
         let data = try Data(contentsOf: url)
-        let credentials = try JSONDecoder().decode(Credentials.self, from: data)
+        let credentials = try JSONDecoder().decode(GoogleCloudCredentials.self, from: data)
         
         guard credentials.type == "service_account" else { throw InitError.wrongCredentialsType(credentials) }
         
@@ -226,7 +199,7 @@ class GoogleCloudLogging {
         session = URLSession(configuration: .ephemeral, delegate: nil, delegateQueue: operationQueue)
     }
     
-    init(credentials: Credentials) throws {
+    init(credentials: GoogleCloudCredentials) throws {
         guard credentials.type == "service_account" else { throw InitError.wrongCredentialsType(credentials) }
         
         serviceAccountCredentials = credentials

@@ -258,6 +258,30 @@ public struct GoogleCloudLogHandler: LogHandler {
         }
     }
     
+    public static func setup(credentials: GoogleCloudCredentials, clientId: UUID?, logFile: URL = logFile) throws {
+        
+        let isFirstSetup = (logging == nil)
+        logging = try GoogleCloudLogging(credentials: credentials)
+        
+        globalMetadata[MetadataKey.clientId] = clientId.map(Logger.MetadataValue.stringConvertible)
+        
+        Self.logFile = logFile
+        try prepareLogFile()
+        
+        clearLogFileIfNeeded()
+        
+        upload()
+        
+        DispatchQueue.main.async { // Async in case setup before LoggingSystem bootstrap.
+            if !isFirstSetup {
+                logger.warning("Repeated setup of GoogleCloudLogHandler")
+                fileHandleQueue.async { // Assert in fileHandleQueue so warning is saved.
+                    assertionFailure("App should only setup GoogleCloudLogHandler once")
+                }
+            }
+        }
+    }
+    
     /// Use as `GoogleCloudLogHandler` factory for `LoggingSystem.bootstrap()` and `Logger.init()`.
     ///
     /// - Parameter label: Forwarded `logger.label` which is typically the enclosing class name.
