@@ -214,9 +214,19 @@ class GoogleCloudLogging {
 
     
     init(serviceAccountCredentials url: URL) throws {
-        
         let data = try Data(contentsOf: url)
         let credentials = try JSONDecoder().decode(Credentials.self, from: data)
+        
+        guard credentials.type == "service_account" else { throw InitError.wrongCredentialsType(credentials) }
+        
+        serviceAccountCredentials = credentials
+        
+        let operationQueue = OperationQueue()
+        operationQueue.underlyingQueue = completionHandlerQueue
+        session = URLSession(configuration: .ephemeral, delegate: nil, delegateQueue: operationQueue)
+    }
+    
+    init(credentials: Credentials) throws {
         guard credentials.type == "service_account" else { throw InitError.wrongCredentialsType(credentials) }
         
         serviceAccountCredentials = credentials
